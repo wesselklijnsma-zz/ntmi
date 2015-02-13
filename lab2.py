@@ -1,18 +1,16 @@
 # python lab2.py -c [path] -n [value] -m [value]
 # Assignment 2
 # Marco Schaap 5871352
-
-import sys, getopt, operator
-
-
-ngrams = {}
+from __future__ import division
+import sys, getopt, operator, re
 
 
 def readfile(file):
 
-    paragraphs = ""
+    paragraphs = {}
     paragraph = ""
     flag = 1
+    i = 0
     
     with open(file,'r') as f:
 
@@ -25,13 +23,13 @@ def readfile(file):
                 paragraph += line
             elif line.strip() == '' :
                 line += 'STOP '
-                paragraph += line
-                 # print paragraph
-                paragraphs += paragraph.replace('\n', ' ')
-                paragraph = ""
+                paragraph += line 
+                paragraphs[i] = paragraph.replace('\n', ' ')
+                paragraph = "";
                 flag = 1
-
-    paragraphs = paragraphs.rstrip()
+                i += 1
+    
+    paragraphs = [paragraphs[p] for p in paragraphs if len(re.findall(r'\w+', paragraphs[p])) > 1]
     return paragraphs
     
 
@@ -42,36 +40,56 @@ def setNgrams(n, text):
     words = []
     ngrams = {}
 
-    with open(text,'r') as f:
-        for line in f:
-            for word in line.split(): 
-                words.append(word)
 
-    for i in range (0, (len(words) - n)):
-        ngram = ''
-        for j in range(0, n):
-            ngram += words[i+j] + " "
+    for paragraph in text:
+        for word in paragraph.split(): 
+            words.append(word)
 
-        ngram = ngram.rstrip()
+        for i in range (0, (len(words) - n)):
+            ngram = ''
+            for j in range(0, n):
+                ngram += words[i+j] + " "
 
-        if(ngram in ngrams):
-            ngrams[ngram] += 1
-        else:
-            ngrams[ngram] = 1
+            ngram = ngram.rstrip()
+
+            if(ngram in ngrams):
+                ngrams[ngram] += 1
+            else:
+                ngrams[ngram] = 1
+        words = []
 
     return ngrams
 
 def sumList():
     print 'The sum is: ', sum(ngrams.values())
 
-def freq(m):
+def freq(m, ngrams):
     sortedNgrams = sorted(ngrams.items(), key=operator.itemgetter(1), reverse=True)
 
     for i in range(0,m):
         print sortedNgrams[i]
 
+def probN(sequence, training):
+    n = len(sequence.split())
+    p = 0
+    ngrams = setNgrams(n, training)
+    ngrams1 = setNgrams(n-1, training)
+
+    lastWord = sequence.rsplit()[-1]
+    head = sequence.replace(lastWord, '').rstrip()
+    sequence = sequence.rstrip()
+    if sequence in ngrams and head in ngrams1:
+        print ngrams[sequence]
+        print ngrams1[head]
+        p = ngrams[sequence]/ngrams1[head]
+
+    return p
+
+
 def main(argv):
     inputfile = ''
+    file2 = 'test.txt'
+
 
     try:
         opts, args = getopt.getopt(argv,"c:n:m:", ["ifile="])
@@ -87,9 +105,10 @@ def main(argv):
             m = int(arg)
 
     text = readfile(inputfile)
-    print text
-    #setNgrams()
-
+    with open(file2, 'r') as f:
+        for line in f:
+            print line 
+            print probN(line, text)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
