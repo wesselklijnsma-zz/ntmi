@@ -4,30 +4,49 @@
 
 import sys, getopt, operator
 
-paragraphs = []
+
 ngrams = {}
+
 
 def readfile(file):
 
-    paragraph = []
+    paragraphs = ""
+    paragraph = ""
     flag = 1
-
+    
     with open(file,'r') as f:
-        for line in f:
+
+        for line in f:   
             if line.strip() != '' and flag == 1:
-                paragraph.append('START')
-                paragraph.append(line)
+                paragraph += 'START ' 
+                paragraph += line
                 flag = 0
             elif line.strip() != '' and flag == 0:
-                paragraph.append(line)
-            elif line.strip() == '' and flag == 0:
-                paragraph.append('STOP')
-                paragraphs.append(paragraph)
-                paragraph = []
+                paragraph += line
+            elif line.strip() == '' :
+                line += 'STOP '
+                paragraph += line
+                 # print paragraph
+                paragraphs += paragraph.replace('\n', ' ')
+                paragraph = ""
                 flag = 1
 
+    paragraphs = paragraphs.rstrip()
+    return paragraphs
+    
 
-def setNgrams(n):
+
+
+
+def setNgrams(n, text):
+    words = []
+    ngrams = {}
+
+    with open(text,'r') as f:
+        for line in f:
+            for word in line.split(): 
+                words.append(word)
+
     for i in range (0, (len(words) - n)):
         ngram = ''
         for j in range(0, n):
@@ -39,6 +58,8 @@ def setNgrams(n):
             ngrams[ngram] += 1
         else:
             ngrams[ngram] = 1
+
+    return ngrams
 
 def sumList():
     print 'The sum is: ', sum(ngrams.values())
@@ -65,8 +86,9 @@ def main(argv):
         elif opt == "-m":
             m = int(arg)
 
-    readfile(inputfile)
-    print paragraphs[5]
+    text = readfile(inputfile)
+    print text
+    #setNgrams()
 
 
 if __name__ == "__main__":
